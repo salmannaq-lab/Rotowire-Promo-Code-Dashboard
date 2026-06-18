@@ -64,6 +64,9 @@ body{font-family:var(--font-sans,'system-ui');color:var(--color-text-primary);ba
 .table-filters{display:flex;gap:8px;flex-wrap:wrap}
 .table-filters input,.table-filters select{font-size:12px;padding:4px 8px;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
 .no-data{color:var(--color-text-secondary);font-size:13px;padding:1.5rem;text-align:center}
+.toggle{display:inline-flex;margin-left:auto;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);overflow:hidden}
+.toggle button{font-size:11px;font-weight:500;padding:3px 11px;border:none;background:var(--color-background-primary);color:#534AB7;cursor:pointer;text-transform:uppercase;letter-spacing:.04em}
+.toggle button.active{background:#534AB7;color:#fff}
 </style>
 
 <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)">
@@ -104,7 +107,7 @@ body{font-family:var(--font-sans,'system-ui');color:var(--color-text-primary);ba
 </div>
 
 <div class="card" style="margin-bottom:16px">
-  <div class="card-header"><span class="card-title" id="weekly-title">Weekly trend</span></div>
+  <div class="card-header"><span class="card-title" id="weekly-title">Weekly trend</span><span class="toggle" id="trendToggle"><button data-mode="weekly" class="active" onclick="setTrendMode('weekly')">Weekly</button><button data-mode="monthly" onclick="setTrendMode('monthly')">Monthly</button></span></div>
   <div class="card-body"><div class="chart-wrap" style="height:180px"><canvas id="weeklyChart"></canvas></div></div>
 </div>
 
@@ -175,6 +178,29 @@ function chColor(ch){return chColors[ch]||'#888780'}
 
 let allCodes=[],allWeeks=[],sortKey='range',sortDir=-1;
 let topChart=null,chanChart=null,weekChart=null;
+let trendMode='weekly';
+
+function setTrendMode(m){
+  trendMode=m;
+  document.querySelectorAll('#trendToggle button').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  compute();
+}
+
+// turn the in-range weeks into trend buckets: one per week, or grouped by month
+function trendPeriods(filtWks){
+  if(trendMode==='monthly'){
+    const map=new Map();
+    filtWks.forEach((w,i)=>{
+      const d=new Date(w.date),key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const label=d.toLocaleString('default',{month:'short',year:'numeric'});
+      if(!map.has(key))map.set(key,{label,idxs:[]});
+      map.get(key).idxs.push(i);
+    });
+    const arr=[...map.values()];
+    return {labels:arr.map(m=>m.label),groups:arr.map(m=>m.idxs)};
+  }
+  return {labels:filtWks.map(w=>w.label),groups:filtWks.map((_,i)=>[i])};
+}
 
 function labelToDate(label){
   const p=label.split('/');
@@ -267,9 +293,12 @@ function compute(){
   document.getElementById('m-ch-sub').textContent=(chF||codeF)?`${total} subs`:(topCh?`${topCh[1]} subs`:'—');
   document.getElementById('m-active').textContent=scoped.filter(c=>c.range>0).length;
   const scopeLabel=codeF||chF;
+  const trendLabel=trendMode==='monthly'?'monthly trend':'weekly trend';
   document.getElementById('top-codes-title').textContent=scopeLabel?`${scopeLabel} — codes in range`:'top codes in range';
   document.getElementById('channel-title').textContent=scopeLabel?`${scopeLabel} — code share`:'channel breakdown';
-  document.getElementById('weekly-title').textContent=scopeLabel?`${scopeLabel} — weekly trend`:'weekly trend';
+  document.getElementById('weekly-title').textContent=scopeLabel?`${scopeLabel} — ${trendLabel}`:trendLabel;
+
+  const tp=trendPeriods(filtWks);
 
   const top10=sorted.filter(c=>c.range>0).slice(0,10);
   if(topChart)topChart.destroy();
@@ -281,15 +310,15 @@ function compute(){
     if(chanChart)chanChart.destroy();
     chanChart=new Chart(document.getElementById('channelChart'),{type:'doughnut',data:{labels:codesInCh.map(c=>c.code),datasets:[{data:codesInCh.map(c=>c.range),backgroundColor:codesInCh.map((_,i)=>codeColorPalette[i%codeColorPalette.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/total*100)}%)`}}},cutout:'58%'}});
     if(weekChart)weekChart.destroy();
-    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:filtWks.map(w=>w.label),datasets:codesInCh.map((c,i)=>({label:c.code,data:c.wkSlice,backgroundColor:codeColorPalette[i%codeColorPalette.length]+'bb',borderColor:codeColorPalette[i%codeColorPalette.length],borderWidth:1,borderRadius:2,stack:'s'}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{stacked:true,ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{stacked:true,ticks:{font:{size:11}}}}}});
+    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:tp.labels,datasets:codesInCh.map((c,i)=>({label:c.code,data:tp.groups.map(g=>g.reduce((a,wi)=>a+(c.wkSlice[wi]||0),0)),backgroundColor:codeColorPalette[i%codeColorPalette.length]+'bb',borderColor:codeColorPalette[i%codeColorPalette.length],borderWidth:1,borderRadius:2,stack:'s'}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{stacked:true,ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{stacked:true,ticks:{font:{size:11}}}}}});
   } else {
     const chEntries=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
     document.getElementById('channel-legend').innerHTML=chEntries.map(([ch,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${chColor(ch)}"></span>${ch} ${v}</span>`).join('');
     if(chanChart)chanChart.destroy();
     chanChart=new Chart(document.getElementById('channelChart'),{type:'doughnut',data:{labels:chEntries.map(e=>e[0]),datasets:[{data:chEntries.map(e=>e[1]),backgroundColor:chEntries.map(e=>chColor(e[0])),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${Math.round(c.raw/enriched.reduce((a,x)=>a+x.range,0)*100)}%)`}}},cutout:'58%'}});
     if(weekChart)weekChart.destroy();
-    const wkTotals=filtWks.map((_,wi)=>enriched.reduce((a,c)=>a+(c.wkSlice[wi]||0),0));
-    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:filtWks.map(w=>w.label),datasets:[{label:'Promo subs',data:wkTotals,backgroundColor:'#7F77DD',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{ticks:{font:{size:11}}}}}});
+    const wkTotals=tp.groups.map(g=>g.reduce((a,wi)=>a+enriched.reduce((s,c)=>s+(c.wkSlice[wi]||0),0),0));
+    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:tp.labels,datasets:[{label:'Promo subs',data:wkTotals,backgroundColor:'#7F77DD',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{ticks:{font:{size:11}}}}}});
   }
   renderTable(enriched);
 }
