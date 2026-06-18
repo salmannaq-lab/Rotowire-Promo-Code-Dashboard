@@ -188,7 +188,7 @@ function init(codes,weeks,isLive){
   const uniqueChannels=[...new Set(allCodes.map(c=>c.ch))].sort();
   const chSel=document.getElementById('channelFilter');
   chSel.innerHTML='<option value="">All channels</option>';
-  uniqueChannels.forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
+  uniqueChannels.filter(ch=>ch&&!/^\d/.test(ch)&&ch.toLowerCase()!=='channel').forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
   buildPeriodOptions();
   compute();
   document.getElementById('quickRange').addEventListener('change',e=>{setRange(e.target.value);compute();});
@@ -331,9 +331,11 @@ function parseCSV(csv){
   for(let i=hi+1;i<rows.length;i++){
     const r=rows[i],code=(r[0]||'').trim();
     if(!code||code==='TOTAL'||code.toLowerCase().startsWith('total'))continue;
-    codes.push({code,ch:(r[4]||'').trim(),status:(r[5]||'Live').trim(),t:parseInt((r[1]||'0').replace(/,/g,''))||0,weeks:weekCols.map(w=>parseInt(r[w.idx])||0)});
+    codes.push({code,ch:(r[4]||'').trim(),status:(r[5]||'').trim(),t:parseInt((r[1]||'0').replace(/,/g,''))||0,weeks:weekCols.map(w=>parseInt(r[w.idx])||0)});
   }
-  return codes.length?{codes,weeks:weekCols.map(w=>({label:w.label,date:labelToDate(w.label)}))}:null;
+  // filter out rows with missing/invalid channel or status
+  const filtered=codes.filter(c=>c.ch&&!/^\d/.test(c.ch)&&c.ch.toLowerCase()!=='channel'&&c.status);
+  return filtered.length?{codes:filtered,weeks:weekCols.map(w=>({label:w.label,date:labelToDate(w.label)}))}:null;
 }
 
 async function tryFetch(){
