@@ -183,12 +183,12 @@ function labelToDate(label){
 
 function init(codes,weeks,isLive){
   allCodes=codes;allWeeks=weeks;
-  const ts=isLive?`Live · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'Showing cached data — sheet unavailable';
+  const ts=isLive?`Live · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:`Showing cached data — sheet unavailable${fetchError?' ('+fetchError+')':''}`;
   document.getElementById('last-updated').textContent=ts;
   const uniqueChannels=[...new Set(allCodes.map(c=>c.ch))].sort();
   const chSel=document.getElementById('channelFilter');
   chSel.innerHTML='<option value="">All channels</option>';
-  uniqueChannels.filter(ch=>ch&&!/^\d/.test(ch)&&ch.toLowerCase()!=='channel').forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
+  uniqueChannels.filter(ch=>ch&&!NUMERIC_ONLY.test(ch)&&ch.toLowerCase()!=='channel').forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
   buildPeriodOptions();
   compute();
   document.getElementById('quickRange').addEventListener('change',e=>{setRange(e.target.value);compute();});
@@ -318,39 +318,95 @@ function sortTable(key){
   renderTable(allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0)})));
 }
 
+// matches a value made up only of digits / commas / dots / % / dashes (i.e. not a real channel name)
+const NUMERIC_ONLY=/^[\s\d.,%+\-]+$/;
+
 function parseCSV(csv){
   const rows=Papa.parse(csv,{skipEmptyLines:true}).data;
-  let hi=-1;
-  for(let i=0;i<rows.length;i++){if(rows[i][0]==='Code'&&rows[i][1]==='Total'){hi=i;break;}}
+
+  // --- locate the header row: any row containing both a "Code" cell and a "Total" cell ---
+  let hi=-1,headers=null;
+  for(let i=0;i<rows.length;i++){
+    const cells=rows[i].map(c=>(c||'').trim().toLowerCase());
+    if(cells.includes('code')&&cells.includes('total')){hi=i;headers=rows[i];break;}
+  }
   if(hi===-1)return null;
-  const headers=rows[hi];
+
+  // --- find each column by header NAME instead of a fixed position ---
+  const norm=headers.map(c=>(c||'').trim().toLowerCase());
+  const findCol=(...names)=>{
+    for(const n of names){const idx=norm.indexOf(n);if(idx!==-1)return idx;}
+    return -1;
+  };
+  const codeIdx=findCol('code');
+  const totalIdx=findCol('total');
+  let chIdx=findCol('channel','channels','source');
+  let stIdx=findCol('status','state');
+  // fall back to the legacy fixed positions only if the header isn't named
+  if(chIdx===-1)chIdx=4;
+  if(stIdx===-1)stIdx=5;
+
+  // --- week columns: any header that looks like a date (e.g. 1/26/26) ---
   const weekCols=[];
-  for(let i=6;i<headers.length;i++){if((headers[i]||'').trim().match(/^\d+\/\d+\/\d+$/))weekCols.push({idx:i,label:headers[i].trim()});}
+  for(let i=0;i<headers.length;i++){
+    if((headers[i]||'').trim().match(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/))weekCols.push({idx:i,label:headers[i].trim()});
+  }
+  // fold the "2026 Adjustment" reconciliation column in as the latest period so
+  // each code's weekly sum still ties out to its 2026 subs total
+  const adjIdx=norm.findIndex(h=>h.includes('adjustment'));
+  if(adjIdx!==-1)weekCols.push({idx:adjIdx,label:'6/10/26'});
   if(!weekCols.length)return null;
+
+  const num=v=>parseInt((v==null?'':v).toString().replace(/,/g,''))||0;
   const codes=[];
   for(let i=hi+1;i<rows.length;i++){
-    const r=rows[i],code=(r[0]||'').trim();
-    if(!code||code==='TOTAL'||code.toLowerCase().startsWith('total'))continue;
-    codes.push({code,ch:(r[4]||'').trim(),status:(r[5]||'').trim(),t:parseInt((r[1]||'0').replace(/,/g,''))||0,weeks:weekCols.map(w=>parseInt(r[w.idx])||0)});
+    const code=(rows[i][codeIdx]||'').trim();
+    // the promo-code table ends at the TOTAL row; everything below it belongs to
+    // separate stacked tables (Affiliate, by-month, renewals, save rate) — ignore it
+    if(/^total/i.test(code))break;
+    if(!code)continue;
+    const r=rows[i];
+    codes.push({
+      code,
+      ch:(r[chIdx]||'').trim(),
+      status:(r[stIdx]||'').trim(),
+      t:num(r[totalIdx]),
+      weeks:weekCols.map(w=>num(r[w.idx]))
+    });
   }
-  // filter out rows with missing/invalid channel or status
-  const filtered=codes.filter(c=>c.ch&&!/^\d/.test(c.ch)&&c.ch.toLowerCase()!=='channel'&&c.status);
+
+  // keep only real promo rows: a Live/Expired status and a textual channel name
+  const filtered=codes.filter(c=>
+    /^(live|expired)$/i.test(c.status) &&
+    c.ch && !NUMERIC_ONLY.test(c.ch) && c.ch.toLowerCase()!=='channel'
+  );
   return filtered.length?{codes:filtered,weeks:weekCols.map(w=>({label:w.label,date:labelToDate(w.label)}))}:null;
 }
 
+const SHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRhCnIekyoW-ojS5_0F_LEGCeHshqME1deZ7XUJTIICGqWsxlg72KhlmMiu-BKxaPT-FUfrVsHpvRkT/pub?gid=64840093&single=true&output=csv';
+let fetchError='';
+
 async function tryFetch(){
+  const enc=encodeURIComponent(SHEET_URL);
+  // several public CORS proxies, tried in order — if one is down/rate-limited we fall through to the next
   const proxies=[
-    `https://corsproxy.io/?${encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vRhCnIekyoW-ojS5_0F_LEGCeHshqME1deZ7XUJTIICGqWsxlg72KhlmMiu-BKxaPT-FUfrVsHpvRkT/pub?gid=64840093&single=true&output=csv')}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vRhCnIekyoW-ojS5_0F_LEGCeHshqME1deZ7XUJTIICGqWsxlg72KhlmMiu-BKxaPT-FUfrVsHpvRkT/pub?gid=64840093&single=true&output=csv')}`,
+    `https://api.allorigins.win/raw?url=${enc}`,
+    `https://corsproxy.io/?url=${enc}`,
+    `https://thingproxy.freeboard.io/fetch/${SHEET_URL}`,
+    `https://api.codetabs.com/v1/proxy/?quest=${enc}`,
   ];
   for(const url of proxies){
     try{
-      const res=await Promise.race([fetch(url),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))]);
-      if(!res.ok)continue;
+      const res=await Promise.race([
+        fetch(url,{redirect:'follow'}),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
+      ]);
+      if(!res.ok){fetchError=`HTTP ${res.status}`;continue;}
       const text=await res.text();
       const parsed=parseCSV(text);
       if(parsed)return parsed;
-    }catch(e){continue;}
+      fetchError='fetched, but no promo-code table found';
+    }catch(e){fetchError=e.message||'network/proxy blocked';continue;}
   }
   return null;
 }
