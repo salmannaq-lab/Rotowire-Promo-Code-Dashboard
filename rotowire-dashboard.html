@@ -1,0 +1,339 @@
+<h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">RotoWire promo code dashboard.</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,'system-ui');color:var(--color-text-primary);background:var(--color-background-tertiary)}
+.header{background:#534AB7;padding:14px 20px;display:flex;align-items:center;gap:10px;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0}
+.header-logo{font-size:15px;font-weight:500;color:#fff}
+.header-sub{font-size:12px;color:#CECBF6;margin-left:auto}
+.body{padding:16px}
+.filter-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:16px}
+.filter-card-title{font-size:11px;font-weight:500;color:#534AB7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.filter-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;min-width:120px}
+.filter-group-label{font-size:10px;font-weight:500;color:#534AB7;text-transform:uppercase;letter-spacing:.06em;padding:4px 9px 2px;background:#EEEDFE;border-bottom:0.5px solid #AFA9EC}
+.filter-group input[type=date],.filter-group select{font-size:12px;padding:5px 9px;border:none;background:var(--color-background-primary);color:var(--color-text-primary);outline:none;width:100%}
+.filter-group input:focus,.filter-group select:focus{background:#EEEDFE}
+.divider{width:1px;height:40px;background:var(--color-border-tertiary);align-self:center}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.metric{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.metric-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.metric-value{font-size:22px;font-weight:500;color:#534AB7}
+.metric-sub{font-size:11px;color:var(--color-text-secondary);margin-top:3px}
+.charts-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.card-header{padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:#EEEDFE;display:flex;align-items:center;gap:6px}
+.card-title{font-size:11px;font-weight:500;color:#3C3489;text-transform:uppercase;letter-spacing:.06em}
+.card-body{padding:14px 16px}
+.chart-wrap{position:relative;width:100%}
+.top-table{width:100%;border-collapse:collapse;font-size:13px}
+.top-table th{font-size:11px;font-weight:500;color:#534AB7;text-align:left;padding:8px 10px;background:#EEEDFE;border-bottom:0.5px solid #AFA9EC;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap}
+.top-table th:hover{color:#3C3489}
+.top-table td{padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.top-table tr:last-child td{border-bottom:none}
+.top-table tr:hover td{background:#EEEDFE}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.badge-live{background:#EEEDFE;color:#3C3489}
+.badge-exp{background:#F1EFE8;color:#5F5E5A}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--color-text-secondary)}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.table-toolbar{padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:#EEEDFE;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.table-toolbar-title{font-size:11px;font-weight:500;color:#3C3489;text-transform:uppercase;letter-spacing:.06em}
+.table-filters{display:flex;gap:8px;flex-wrap:wrap}
+.table-filters input,.table-filters select{font-size:12px;padding:4px 8px;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.no-data{color:var(--color-text-secondary);font-size:13px;padding:1.5rem;text-align:center}
+</style>
+
+<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)">
+<div class="header">
+  <span class="header-logo">RotoWire promo code dashboard</span>
+  <span class="header-sub" id="last-updated">Loading…</span>
+</div>
+<div class="body">
+
+<div class="filter-card">
+  <div class="filter-card-title">Filters</div>
+  <div class="filter-row">
+    <div class="filter-group"><div class="filter-group-label">Period</div><select id="quickRange"></select></div>
+    <div class="filter-group"><div class="filter-group-label">From</div><input type="date" id="dateFrom"></div>
+    <div class="filter-group"><div class="filter-group-label">To</div><input type="date" id="dateTo"></div>
+    <div class="divider"></div>
+    <div class="filter-group"><div class="filter-group-label">Channel</div><select id="channelFilter"><option value="">All channels</option></select></div>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Promo subs in range</div><div class="metric-value" id="m-subs">—</div><div class="metric-sub" id="m-sub-sub">—</div></div>
+  <div class="metric"><div class="metric-label">Top code</div><div class="metric-value" id="m-top">—</div><div class="metric-sub" id="m-top-sub">—</div></div>
+  <div class="metric"><div class="metric-label">Top channel</div><div class="metric-value" id="m-ch">—</div><div class="metric-sub" id="m-ch-sub">—</div></div>
+  <div class="metric"><div class="metric-label">Codes with activity</div><div class="metric-value" id="m-active">—</div><div class="metric-sub">codes with ≥1 sub</div></div>
+</div>
+
+<div class="charts-row">
+  <div class="card">
+    <div class="card-header"><span class="card-title" id="top-codes-title">Top codes in range</span></div>
+    <div class="card-body"><div class="chart-wrap" style="height:240px"><canvas id="topCodesChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title" id="channel-title">Channel breakdown</span></div>
+    <div class="card-body"><div class="legend" id="channel-legend" style="margin-bottom:10px"></div><div class="chart-wrap" style="height:190px"><canvas id="channelChart"></canvas></div></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-header"><span class="card-title" id="weekly-title">Weekly trend</span></div>
+  <div class="card-body"><div class="chart-wrap" style="height:180px"><canvas id="weeklyChart"></canvas></div></div>
+</div>
+
+<div class="card">
+  <div class="table-toolbar">
+    <span class="table-toolbar-title">All codes — click header to sort</span>
+    <div class="table-filters">
+      <input type="text" id="codeSearch" placeholder="Search code…" style="width:130px">
+      <select id="statusFilter"><option value="">All statuses</option><option value="Live">Live</option><option value="Expired">Expired</option></select>
+    </div>
+  </div>
+  <div id="table-area"><div class="no-data">Loading…</div></div>
+</div>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+const FALLBACK_CODES=[
+  {code:'RW10',ch:'On Site',status:'Live',t:1024,weeks:[85,26,28,19,13,22,0,26,11,15,17,8,11,11,24,51]},
+  {code:'WELCOME',ch:'Email',status:'Live',t:970,weeks:[38,25,14,12,9,18,9,9,4,2,5,5,3,0,5,7]},
+  {code:'ROTO15',ch:'All',status:'Live',t:763,weeks:[32,7,12,9,8,14,10,7,13,2,0,3,5,0,1,15]},
+  {code:'KIT15',ch:'All',status:'Live',t:728,weeks:[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1]},
+  {code:'YOUTUBE15',ch:'Youtube/Podcast',status:'Live',t:448,weeks:[32,17,23,22,26,49,30,42,30,6,3,1,1,1,1,3]},
+  {code:'TWITTER15/SOCIAL15',ch:'Twitter/IG',status:'Live',t:445,weeks:[11,0,10,6,1,4,7,38,19,10,5,15,22,9,23,42]},
+  {code:'ALL',ch:'Flash Sale',status:'Live',t:398,weeks:[7,8,39,1,2,1,3,1,0,0,0,0,0,0,0,1]},
+  {code:'RWCS15',ch:'CS',status:'Live',t:286,weeks:[15,13,5,3,6,7,9,9,6,6,3,5,5,7,6,12]},
+  {code:'SMART',ch:'Flash Sale',status:'Live',t:112,weeks:[0,0,0,0,0,0,0,21,27,12,11,9,6,3,2,21]},
+  {code:'GRILLGUY',ch:'Influencer',status:'Live',t:104,weeks:[9,0,11,1,2,12,13,9,5,0,2,0,0,1,0,0]},
+  {code:'RTS/ROUNDTABLE',ch:'Influencer',status:'Live',t:210,weeks:[35,10,1,1,3,10,4,3,2,2,0,1,2,0,2,18]},
+  {code:'OPENINGDAY',ch:'Email (flash)',status:'Expired',t:199,weeks:[0,0,0,0,0,0,0,0,181,11,3,4,0,0,0,0]},
+  {code:'REDDIT',ch:'Reddit',status:'Live',t:94,weeks:[8,0,7,1,1,5,5,5,1,1,0,0,0,1,0,1]},
+  {code:'DAFT',ch:'Influencer',status:'Live',t:92,weeks:[4,0,1,0,1,0,0,0,2,0,0,0,0,0,0,1]},
+  {code:'CJCURRY',ch:'Influencer',status:'Live',t:78,weeks:[0,0,15,4,7,3,0,0,0,0,0,0,2,1,0,5]},
+  {code:'SXM/SIRIUS',ch:'Sirius XM',status:'Live',t:91,weeks:[2,0,1,2,0,10,3,0,5,1,0,0,1,0,0,2]},
+  {code:'RWCS30',ch:'CS',status:'Live',t:96,weeks:[0,0,0,0,4,1,0,0,1,0,2,4,2,1,2,15]},
+  {code:'KOH15',ch:'James Koh',status:'Live',t:55,weeks:[4,0,0,0,0,0,1,3,4,3,2,6,3,8,6,2]},
+  {code:'BWTB',ch:'Influencer',status:'Live',t:55,weeks:[0,0,10,0,10,10,1,10,0,0,0,0,1,0,0,1]},
+  {code:'DRAFT',ch:'Flash Sale',status:'Expired',t:166,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,46,0,0,0]},
+  {code:'DRAFT50',ch:'Flash Sale',status:'Expired',t:40,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,39,0,0,0]},
+  {code:'SUPER60',ch:'Email/On-site',status:'Expired',t:37,weeks:[0,37,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {code:'OLYMPIC',ch:'Email/On-site',status:'Expired',t:31,weeks:[0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {code:'GLEEMAN',ch:'Podcast',status:'Live',t:34,weeks:[0,0,0,0,0,5,1,6,1,0,0,0,0,0,0,1]},
+  {code:'PICKS50',ch:'Email',status:'Live',t:35,weeks:[0,0,4,6,7,4,3,0,0,2,3,0,0,0,0,-3]},
+  {code:'FORYOU30',ch:'Email',status:'Live',t:21,weeks:[0,1,3,2,3,2,1,2,1,1,1,1,1,2,0,-6]},
+  {code:'RICHPICKS',ch:'Influencer',status:'Live',t:19,weeks:[3,0,0,1,2,0,0,11,0,0,1,0,0,0,0,1]},
+  {code:'DFS50',ch:'Email',status:'Live',t:17,weeks:[0,5,0,1,2,2,0,0,0,0,0,0,0,0,0,0]},
+  {code:'FACEBOOK15',ch:'Facebook',status:'Live',t:23,weeks:[5,0,0,1,0,0,1,2,0,0,0,0,0,0,0,0]},
+  {code:'RWCS50',ch:'CS',status:'Live',t:26,weeks:[2,0,1,1,0,0,1,1,1,0,0,1,0,0,0,0]},
+  {code:'GOBIG',ch:'Influencer',status:'Live',t:83,weeks:[1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1]},
+  {code:'ROTOWIRE15',ch:'All',status:'Live',t:13,weeks:[0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,-2]},
+  {code:'MONEYDOWN',ch:'Influencer',status:'Live',t:12,weeks:[0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0]},
+  {code:'PODCAST',ch:'Podcast',status:'Live',t:5,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5]},
+  {code:'HOLIDAY',ch:'Email',status:'Live',t:28,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2]},
+  {code:'VSIN',ch:'VSIN',status:'Live',t:4,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]},
+  {code:'NFLMIKE',ch:'Influencer',status:'Live',t:2,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]},
+  {code:'PUBPOOL15',ch:'Influencer',status:'Live',t:4,weeks:[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]},
+  {code:'BRODY15',ch:'Influencer',status:'Live',t:3,weeks:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]},
+];
+const FALLBACK_WEEKS=[
+  '1/26/26','2/2/26','2/9/26','2/16/26','2/23/26','3/2/26','3/9/26','3/16/26','3/23/26','3/30/26','4/6/26','4/13/26','4/20/26','4/27/26','5/4/26','6/10/26'
+].map(l=>({label:l,date:labelToDate(l)}));
+
+const codeColorPalette=['#534AB7','#7F77DD','#AFA9EC','#3C3489','#1D9E75','#D85A30','#BA7517','#D4537E','#639922','#5DCAA5','#888780','#0F6E56','#993C1D','#85B7EB'];
+const chColors={'On Site':'#534AB7','Email':'#1D9E75','All':'#7F77DD','Youtube/Podcast':'#D85A30','Twitter/IG':'#D4537E','CS':'#888780','Flash Sale':'#BA7517','Influencer':'#3C3489','Sirius XM':'#5DCAA5','Reddit':'#AFA9EC','James Koh':'#639922','Email (flash)':'#1D9E75','Email/On-site':'#0F6E56','VSIN':'#B4B2A9','Facebook':'#85B7EB','Podcast':'#D85A30'};
+function chColor(ch){return chColors[ch]||'#888780'}
+
+let allCodes=[],allWeeks=[],sortKey='range',sortDir=-1;
+let topChart=null,chanChart=null,weekChart=null;
+
+function labelToDate(label){
+  const p=label.split('/');
+  if(p.length===3){const yr=parseInt(p[2])<50?`20${p[2].padStart(2,'0')}`:`19${p[2]}`;return`${yr}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`;}
+  return'2026-01-01';
+}
+
+function init(codes,weeks,isLive){
+  allCodes=codes;allWeeks=weeks;
+  const ts=isLive?`Live · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'Showing cached data — sheet unavailable';
+  document.getElementById('last-updated').textContent=ts;
+  const uniqueChannels=[...new Set(allCodes.map(c=>c.ch))].sort();
+  const chSel=document.getElementById('channelFilter');
+  chSel.innerHTML='<option value="">All channels</option>';
+  uniqueChannels.forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
+  buildPeriodOptions();
+  compute();
+  document.getElementById('quickRange').addEventListener('change',e=>{setRange(e.target.value);compute();});
+  document.getElementById('dateFrom').addEventListener('change',()=>{document.getElementById('quickRange').value='custom';compute();});
+  document.getElementById('dateTo').addEventListener('change',()=>{document.getElementById('quickRange').value='custom';compute();});
+  document.getElementById('channelFilter').addEventListener('change',compute);
+  ['codeSearch','statusFilter'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',()=>{
+      const si=getWkIdx(document.getElementById('dateFrom').value),ei=getWkIdxEnd(document.getElementById('dateTo').value);
+      renderTable(allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0)})));
+    });
+  });
+}
+
+function buildPeriodOptions(){
+  const months={};
+  allWeeks.forEach(w=>{
+    const d=new Date(w.date),key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleString('default',{month:'short',year:'numeric'});
+    if(!months[key])months[key]={label,first:w.date,last:w.date};
+    else months[key].last=w.date;
+  });
+  const sel=document.getElementById('quickRange');
+  sel.innerHTML='<option value="ytd">YTD 2026</option>';
+  Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([k,m])=>{
+    const o=document.createElement('option');o.value=k;o.textContent=m.label;sel.appendChild(o);
+  });
+  sel.innerHTML+='<option value="custom">Custom range</option>';
+  setRange('ytd');
+}
+
+function setRange(val){
+  if(val==='ytd'){document.getElementById('dateFrom').value=allWeeks[0].date;document.getElementById('dateTo').value=allWeeks[allWeeks.length-1].date;return;}
+  if(val==='custom')return;
+  const months={};
+  allWeeks.forEach(w=>{
+    const d=new Date(w.date),key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!months[key])months[key]={first:w.date,last:w.date};else months[key].last=w.date;
+  });
+  if(months[val]){document.getElementById('dateFrom').value=months[val].first;document.getElementById('dateTo').value=months[val].last;}
+}
+
+function getWkIdx(ds){const d=new Date(ds);for(let i=0;i<allWeeks.length;i++){if(new Date(allWeeks[i].date)>=d)return i;}return allWeeks.length-1;}
+function getWkIdxEnd(ds){const d=new Date(ds);for(let i=allWeeks.length-1;i>=0;i--){if(new Date(allWeeks[i].date)<=d)return i;}return 0;}
+
+function getFiltered(enriched){
+  const chF=document.getElementById('channelFilter').value,stF=document.getElementById('statusFilter').value,q=document.getElementById('codeSearch').value.toLowerCase();
+  return enriched.filter(c=>(!q||c.code.toLowerCase().includes(q)||c.ch.toLowerCase().includes(q))&&(!chF||c.ch===chF)&&(!stF||c.status===stF));
+}
+
+function compute(){
+  const from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;
+  if(!from||!to)return;
+  const si=getWkIdx(from),ei=getWkIdxEnd(to);
+  const filtWks=allWeeks.slice(si,ei+1);
+  const chF=document.getElementById('channelFilter').value;
+  const enriched=allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0),wkSlice:c.weeks.slice(si,ei+1)}));
+  const scoped=chF?enriched.filter(c=>c.ch===chF):enriched;
+  const total=scoped.reduce((a,c)=>a+c.range,0);
+  const sorted=[...scoped].sort((a,b)=>b.range-a.range);
+  const topCode=sorted[0];
+  const chMap={};enriched.forEach(c=>{if(c.range>0)chMap[c.ch]=(chMap[c.ch]||0)+c.range;});
+  const topCh=Object.entries(chMap).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('m-subs').textContent=total.toLocaleString();
+  document.getElementById('m-sub-sub').textContent=`${filtWks[0]?.label||'—'} → ${filtWks[filtWks.length-1]?.label||'—'}`;
+  document.getElementById('m-top').textContent=topCode?.range>0?topCode.code:'—';
+  document.getElementById('m-top-sub').textContent=topCode?.range>0?`${topCode.range} subs`:'—';
+  document.getElementById('m-ch').textContent=chF||(topCh?topCh[0]:'—');
+  document.getElementById('m-ch-sub').textContent=chF?`${total} subs`:(topCh?`${topCh[1]} subs`:'—');
+  document.getElementById('m-active').textContent=scoped.filter(c=>c.range>0).length;
+  document.getElementById('top-codes-title').textContent=chF?`${chF} — codes in range`:'top codes in range';
+  document.getElementById('channel-title').textContent=chF?`${chF} — code share`:'channel breakdown';
+  document.getElementById('weekly-title').textContent=chF?`${chF} — weekly trend`:'weekly trend';
+
+  const top10=sorted.filter(c=>c.range>0).slice(0,10);
+  if(topChart)topChart.destroy();
+  topChart=new Chart(document.getElementById('topCodesChart'),{type:'bar',data:{labels:top10.map(c=>c.code),datasets:[{data:top10.map(c=>c.range),backgroundColor:top10.map((c,i)=>chF?codeColorPalette[i%codeColorPalette.length]:chColor(c.ch)),borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} subs`}}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}}});
+
+  if(chF){
+    const codesInCh=sorted.filter(c=>c.range>0);
+    document.getElementById('channel-legend').innerHTML=codesInCh.map((c,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${codeColorPalette[i%codeColorPalette.length]}"></span>${c.code} ${c.range}</span>`).join('');
+    if(chanChart)chanChart.destroy();
+    chanChart=new Chart(document.getElementById('channelChart'),{type:'doughnut',data:{labels:codesInCh.map(c=>c.code),datasets:[{data:codesInCh.map(c=>c.range),backgroundColor:codesInCh.map((_,i)=>codeColorPalette[i%codeColorPalette.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/total*100)}%)`}}},cutout:'58%'}});
+    if(weekChart)weekChart.destroy();
+    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:filtWks.map(w=>w.label),datasets:codesInCh.map((c,i)=>({label:c.code,data:c.wkSlice,backgroundColor:codeColorPalette[i%codeColorPalette.length]+'bb',borderColor:codeColorPalette[i%codeColorPalette.length],borderWidth:1,borderRadius:2,stack:'s'}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{stacked:true,ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{stacked:true,ticks:{font:{size:11}}}}}});
+  } else {
+    const chEntries=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
+    document.getElementById('channel-legend').innerHTML=chEntries.map(([ch,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${chColor(ch)}"></span>${ch} ${v}</span>`).join('');
+    if(chanChart)chanChart.destroy();
+    chanChart=new Chart(document.getElementById('channelChart'),{type:'doughnut',data:{labels:chEntries.map(e=>e[0]),datasets:[{data:chEntries.map(e=>e[1]),backgroundColor:chEntries.map(e=>chColor(e[0])),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${Math.round(c.raw/enriched.reduce((a,x)=>a+x.range,0)*100)}%)`}}},cutout:'58%'}});
+    if(weekChart)weekChart.destroy();
+    const wkTotals=filtWks.map((_,wi)=>enriched.reduce((a,c)=>a+(c.wkSlice[wi]||0),0));
+    weekChart=new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:filtWks.map(w=>w.label),datasets:[{label:'Promo subs',data:wkTotals,backgroundColor:'#7F77DD',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},maxRotation:45,autoSkip:false}},y:{ticks:{font:{size:11}}}}}});
+  }
+  renderTable(enriched);
+}
+
+function renderTable(enriched){
+  const filtered=getFiltered(enriched);
+  filtered.sort((a,b)=>{
+    const va=sortKey==='range'?a.range:sortKey==='total'?a.t:a[sortKey];
+    const vb=sortKey==='range'?b.range:sortKey==='total'?b.t:b[sortKey];
+    return typeof va==='string'?sortDir*(va.localeCompare(vb)):sortDir*(vb-va);
+  });
+  const area=document.getElementById('table-area');
+  if(!filtered.length){area.innerHTML=`<div class="no-data">No codes match current filters.</div>`;return;}
+  area.innerHTML=`<div style="overflow-x:auto"><table class="top-table"><thead><tr>
+    <th onclick="sortTable('code')">Code <span id="sort-code"></span></th>
+    <th onclick="sortTable('ch')">Channel <span id="sort-ch"></span></th>
+    <th onclick="sortTable('status')">Status <span id="sort-status"></span></th>
+    <th onclick="sortTable('range')" style="text-align:right">In range <span id="sort-range">↓</span></th>
+    <th onclick="sortTable('total')" style="text-align:right">YTD 2026 <span id="sort-total"></span></th>
+  </tr></thead><tbody>${filtered.map(r=>`<tr>
+    <td style="font-weight:500">${r.code}</td>
+    <td style="color:var(--color-text-secondary);font-size:12px">${r.ch}</td>
+    <td><span class="badge ${r.status==='Live'?'badge-live':'badge-exp'}">${r.status}</span></td>
+    <td style="text-align:right;font-weight:500;color:#534AB7">${r.range.toLocaleString()}</td>
+    <td style="text-align:right;color:var(--color-text-secondary)">${r.weeks.reduce((a,b)=>a+b,0).toLocaleString()}</td>
+  </tr>`).join('')}</tbody></table></div>`;
+  ['code','ch','status','range','total'].forEach(k=>{const el=document.getElementById('sort-'+k);if(el)el.textContent=k===sortKey?(sortDir===-1?'↓':'↑'):'';});
+}
+
+function sortTable(key){
+  if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=-1;}
+  const si=getWkIdx(document.getElementById('dateFrom').value),ei=getWkIdxEnd(document.getElementById('dateTo').value);
+  renderTable(allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0)})));
+}
+
+function parseCSV(csv){
+  const rows=Papa.parse(csv,{skipEmptyLines:true}).data;
+  let hi=-1;
+  for(let i=0;i<rows.length;i++){if(rows[i][0]==='Code'&&rows[i][1]==='Total'){hi=i;break;}}
+  if(hi===-1)return null;
+  const headers=rows[hi];
+  const weekCols=[];
+  for(let i=6;i<headers.length;i++){if((headers[i]||'').trim().match(/^\d+\/\d+\/\d+$/))weekCols.push({idx:i,label:headers[i].trim()});}
+  if(!weekCols.length)return null;
+  const codes=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i],code=(r[0]||'').trim();
+    if(!code||code==='TOTAL'||code.toLowerCase().startsWith('total'))continue;
+    codes.push({code,ch:(r[4]||'').trim(),status:(r[5]||'Live').trim(),t:parseInt((r[1]||'0').replace(/,/g,''))||0,weeks:weekCols.map(w=>parseInt(r[w.idx])||0)});
+  }
+  return codes.length?{codes,weeks:weekCols.map(w=>({label:w.label,date:labelToDate(w.label)}))}:null;
+}
+
+async function tryFetch(){
+  const proxies=[
+    `https://corsproxy.io/?${encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vRhCnIekyoW-ojS5_0F_LEGCeHshqME1deZ7XUJTIICGqWsxlg72KhlmMiu-BKxaPT-FUfrVsHpvRkT/pub?gid=64840093&single=true&output=csv')}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://docs.google.com/spreadsheets/d/e/2PACX-1vRhCnIekyoW-ojS5_0F_LEGCeHshqME1deZ7XUJTIICGqWsxlg72KhlmMiu-BKxaPT-FUfrVsHpvRkT/pub?gid=64840093&single=true&output=csv')}`,
+  ];
+  for(const url of proxies){
+    try{
+      const res=await Promise.race([fetch(url),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))]);
+      if(!res.ok)continue;
+      const text=await res.text();
+      const parsed=parseCSV(text);
+      if(parsed)return parsed;
+    }catch(e){continue;}
+  }
+  return null;
+}
+
+(async()=>{
+  const live=await tryFetch();
+  if(live){init(live.codes,live.weeks,true);}
+  else{init(FALLBACK_CODES,FALLBACK_WEEKS,false);}
+})();
+</script>
