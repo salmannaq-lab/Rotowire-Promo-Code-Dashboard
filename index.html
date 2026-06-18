@@ -81,6 +81,7 @@ body{font-family:var(--font-sans,'system-ui');color:var(--color-text-primary);ba
     <div class="filter-group"><div class="filter-group-label">To</div><input type="date" id="dateTo"></div>
     <div class="divider"></div>
     <div class="filter-group"><div class="filter-group-label">Channel</div><select id="channelFilter"><option value="">All channels</option></select></div>
+    <div class="filter-group"><div class="filter-group-label">Promo code</div><select id="codeFilter"><option value="">All codes</option></select></div>
   </div>
 </div>
 
@@ -189,12 +190,16 @@ function init(codes,weeks,isLive){
   const chSel=document.getElementById('channelFilter');
   chSel.innerHTML='<option value="">All channels</option>';
   uniqueChannels.filter(ch=>ch&&!NUMERIC_ONLY.test(ch)&&ch.toLowerCase()!=='channel').forEach(ch=>{const o=document.createElement('option');o.value=ch;o.textContent=ch;chSel.appendChild(o);});
+  const codeSel=document.getElementById('codeFilter');
+  codeSel.innerHTML='<option value="">All codes</option>';
+  [...allCodes].map(c=>c.code).sort((a,b)=>a.localeCompare(b)).forEach(code=>{const o=document.createElement('option');o.value=code;o.textContent=code;codeSel.appendChild(o);});
   buildPeriodOptions();
   compute();
   document.getElementById('quickRange').addEventListener('change',e=>{setRange(e.target.value);compute();});
   document.getElementById('dateFrom').addEventListener('change',()=>{document.getElementById('quickRange').value='custom';compute();});
   document.getElementById('dateTo').addEventListener('change',()=>{document.getElementById('quickRange').value='custom';compute();});
   document.getElementById('channelFilter').addEventListener('change',compute);
+  document.getElementById('codeFilter').addEventListener('change',compute);
   ['codeSearch','statusFilter'].forEach(id=>{
     document.getElementById(id).addEventListener('input',()=>{
       const si=getWkIdx(document.getElementById('dateFrom').value),ei=getWkIdxEnd(document.getElementById('dateTo').value);
@@ -235,8 +240,8 @@ function getWkIdx(ds){const d=new Date(ds);for(let i=0;i<allWeeks.length;i++){if
 function getWkIdxEnd(ds){const d=new Date(ds);for(let i=allWeeks.length-1;i>=0;i--){if(new Date(allWeeks[i].date)<=d)return i;}return 0;}
 
 function getFiltered(enriched){
-  const chF=document.getElementById('channelFilter').value,stF=document.getElementById('statusFilter').value,q=document.getElementById('codeSearch').value.toLowerCase();
-  return enriched.filter(c=>(!q||c.code.toLowerCase().includes(q)||c.ch.toLowerCase().includes(q))&&(!chF||c.ch===chF)&&(!stF||c.status===stF));
+  const chF=document.getElementById('channelFilter').value,stF=document.getElementById('statusFilter').value,codeF=document.getElementById('codeFilter').value,q=document.getElementById('codeSearch').value.toLowerCase();
+  return enriched.filter(c=>(!q||c.code.toLowerCase().includes(q)||c.ch.toLowerCase().includes(q))&&(!chF||c.ch===chF)&&(!stF||c.status===stF)&&(!codeF||c.code===codeF));
 }
 
 function compute(){
@@ -245,8 +250,9 @@ function compute(){
   const si=getWkIdx(from),ei=getWkIdxEnd(to);
   const filtWks=allWeeks.slice(si,ei+1);
   const chF=document.getElementById('channelFilter').value;
+  const codeF=document.getElementById('codeFilter').value;
   const enriched=allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0),wkSlice:c.weeks.slice(si,ei+1)}));
-  const scoped=chF?enriched.filter(c=>c.ch===chF):enriched;
+  const scoped=enriched.filter(c=>(!chF||c.ch===chF)&&(!codeF||c.code===codeF));
   const total=scoped.reduce((a,c)=>a+c.range,0);
   const sorted=[...scoped].sort((a,b)=>b.range-a.range);
   const topCode=sorted[0];
@@ -257,18 +263,19 @@ function compute(){
   document.getElementById('m-sub-sub').textContent=`${filtWks[0]?.label||'—'} → ${filtWks[filtWks.length-1]?.label||'—'}`;
   document.getElementById('m-top').textContent=topCode?.range>0?topCode.code:'—';
   document.getElementById('m-top-sub').textContent=topCode?.range>0?`${topCode.range} subs`:'—';
-  document.getElementById('m-ch').textContent=chF||(topCh?topCh[0]:'—');
-  document.getElementById('m-ch-sub').textContent=chF?`${total} subs`:(topCh?`${topCh[1]} subs`:'—');
+  document.getElementById('m-ch').textContent=codeF?(topCode?.ch||'—'):(chF||(topCh?topCh[0]:'—'));
+  document.getElementById('m-ch-sub').textContent=(chF||codeF)?`${total} subs`:(topCh?`${topCh[1]} subs`:'—');
   document.getElementById('m-active').textContent=scoped.filter(c=>c.range>0).length;
-  document.getElementById('top-codes-title').textContent=chF?`${chF} — codes in range`:'top codes in range';
-  document.getElementById('channel-title').textContent=chF?`${chF} — code share`:'channel breakdown';
-  document.getElementById('weekly-title').textContent=chF?`${chF} — weekly trend`:'weekly trend';
+  const scopeLabel=codeF||chF;
+  document.getElementById('top-codes-title').textContent=scopeLabel?`${scopeLabel} — codes in range`:'top codes in range';
+  document.getElementById('channel-title').textContent=scopeLabel?`${scopeLabel} — code share`:'channel breakdown';
+  document.getElementById('weekly-title').textContent=scopeLabel?`${scopeLabel} — weekly trend`:'weekly trend';
 
   const top10=sorted.filter(c=>c.range>0).slice(0,10);
   if(topChart)topChart.destroy();
-  topChart=new Chart(document.getElementById('topCodesChart'),{type:'bar',data:{labels:top10.map(c=>c.code),datasets:[{data:top10.map(c=>c.range),backgroundColor:top10.map((c,i)=>chF?codeColorPalette[i%codeColorPalette.length]:chColor(c.ch)),borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} subs`}}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}}});
+  topChart=new Chart(document.getElementById('topCodesChart'),{type:'bar',data:{labels:top10.map(c=>c.code),datasets:[{data:top10.map(c=>c.range),backgroundColor:top10.map((c,i)=>(chF||codeF)?codeColorPalette[i%codeColorPalette.length]:chColor(c.ch)),borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} subs`}}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}}});
 
-  if(chF){
+  if(chF||codeF){
     const codesInCh=sorted.filter(c=>c.range>0);
     document.getElementById('channel-legend').innerHTML=codesInCh.map((c,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${codeColorPalette[i%codeColorPalette.length]}"></span>${c.code} ${c.range}</span>`).join('');
     if(chanChart)chanChart.destroy();
