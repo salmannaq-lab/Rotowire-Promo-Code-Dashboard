@@ -173,7 +173,7 @@ const PROBABLY_REAL_CODES=new Set(['BOGO4DAD','WELCOMETHEO20','30OFF','SMARTER75
   'DFSONLY','DFS70','DFS54']);
 const STEM_FALLBACK=[[/^HOLIDAY/i,'Email'],[/^DFS/i,'Email'],[/^(RWCS|CS\d)/i,'CS']];
 const KNOWN_CHANNELS=['On Site','Email','Email (flash)','Email/On-site','Twitter/IG','Youtube/Podcast',
-  'Flash Sale','Influencer','CS','Sirius XM','VSIN','Reddit','James Koh','Facebook','All','Other','Unmapped'];
+  'Flash Sale','Influencer','Internal Talent','CS','Sirius XM','VSIN','Reddit','James Koh','Facebook','All','Other','Unmapped'];
 
 function baseChannel(code){
   const up=code.toUpperCase();
@@ -403,7 +403,7 @@ const FALLBACK_WEEKS=FALLBACK_WEEKS_RAW.map(l=>({label:l,date:labelToDate(l)}));
 const FALLBACK_DAYS=["1/1/26", "1/2/26", "1/3/26", "1/4/26", "1/5/26", "1/6/26", "1/7/26", "1/8/26", "1/9/26", "1/10/26", "1/11/26", "1/12/26", "1/13/26", "1/14/26", "1/15/26", "1/16/26", "1/17/26", "1/18/26", "1/19/26", "1/20/26", "1/21/26", "1/22/26", "1/23/26", "1/24/26", "1/25/26", "1/26/26", "1/27/26", "1/28/26", "1/29/26", "1/30/26", "1/31/26", "2/1/26", "2/2/26", "2/3/26", "2/4/26", "2/5/26", "2/6/26", "2/7/26", "2/8/26", "2/9/26", "2/10/26", "2/11/26", "2/12/26", "2/13/26", "2/14/26", "2/15/26", "2/16/26", "2/17/26", "2/18/26", "2/19/26", "2/20/26", "2/21/26", "2/22/26", "2/23/26", "2/24/26", "2/25/26", "2/26/26", "2/27/26", "2/28/26", "3/1/26", "3/2/26", "3/3/26", "3/4/26", "3/5/26", "3/6/26", "3/7/26", "3/8/26", "3/9/26", "3/10/26", "3/11/26", "3/12/26", "3/13/26", "3/14/26", "3/15/26", "3/16/26", "3/17/26", "3/18/26", "3/19/26", "3/20/26", "3/21/26", "3/22/26", "3/23/26", "3/24/26", "3/25/26", "3/26/26", "3/27/26", "3/28/26", "3/29/26", "3/30/26", "3/31/26", "4/1/26", "4/2/26", "4/3/26", "4/4/26", "4/5/26", "4/6/26", "4/7/26", "4/8/26", "4/9/26", "4/10/26", "4/11/26", "4/12/26", "4/13/26", "4/14/26", "4/15/26", "4/16/26", "4/17/26", "4/18/26", "4/19/26", "4/20/26", "4/21/26", "4/22/26", "4/23/26", "4/24/26", "4/25/26", "4/26/26", "4/27/26", "4/28/26", "4/29/26", "4/30/26", "5/1/26", "5/2/26", "5/3/26", "5/4/26", "5/5/26", "5/6/26", "5/7/26", "5/8/26", "5/9/26", "5/10/26", "5/11/26", "5/12/26", "5/13/26", "5/14/26", "5/15/26", "5/16/26", "5/17/26", "5/18/26", "5/19/26", "5/20/26", "5/21/26", "5/22/26", "5/23/26", "5/24/26", "5/25/26", "5/26/26", "5/27/26", "5/28/26", "5/29/26", "5/30/26", "5/31/26", "6/1/26", "6/2/26", "6/3/26", "6/4/26", "6/5/26", "6/6/26", "6/7/26", "6/8/26", "6/9/26", "6/10/26", "6/11/26", "6/12/26", "6/13/26", "6/14/26", "6/15/26", "6/16/26", "6/17/26", "6/18/26", "6/19/26", "6/20/26", "6/21/26", "6/22/26", "6/23/26", "6/24/26", "6/25/26", "6/26/26", "6/27/26", "6/28/26", "6/29/26", "6/30/26"].map(l=>({label:l,date:labelToDate(l)}));
 
 const codeColorPalette=['#534AB7','#7F77DD','#AFA9EC','#3C3489','#1D9E75','#D85A30','#BA7517','#D4537E','#639922','#5DCAA5','#888780','#0F6E56','#993C1D','#85B7EB'];
-const chColors={'On Site':'#534AB7','Email':'#1D9E75','All':'#7F77DD','Youtube/Podcast':'#D85A30','Twitter/IG':'#D4537E','CS':'#888780','Flash Sale':'#BA7517','Influencer':'#3C3489','Sirius XM':'#5DCAA5','Reddit':'#AFA9EC','James Koh':'#639922','Email (flash)':'#1D9E75','Email/On-site':'#0F6E56','VSIN':'#B4B2A9','Facebook':'#85B7EB','Podcast':'#D85A30','Other':'#B0AEA8','Unmapped':'#D9435E'};
+const chColors={'On Site':'#534AB7','Email':'#1D9E75','All':'#7F77DD','Youtube/Podcast':'#D85A30','Twitter/IG':'#D4537E','CS':'#888780','Flash Sale':'#BA7517','Influencer':'#3C3489','Internal Talent':'#0E7C86','Sirius XM':'#5DCAA5','Reddit':'#AFA9EC','James Koh':'#639922','Email (flash)':'#1D9E75','Email/On-site':'#0F6E56','VSIN':'#B4B2A9','Facebook':'#85B7EB','Podcast':'#D85A30','Other':'#B0AEA8','Unmapped':'#D9435E'};
 function chColor(ch){return chColors[ch]||'#888780'}
 
 let allCodes=[],allWeeks=[],allDays=[],sortKey='range',sortDir=-1;
@@ -486,8 +486,7 @@ function init(codes,weeks,isLive,days){
   document.getElementById('channelFilter').addEventListener('change',compute);
   ['codeSearch','statusFilter'].forEach(id=>{
     document.getElementById(id).addEventListener('input',()=>{
-      const si=getWkIdx(document.getElementById('dateFrom').value),ei=getWkIdxEnd(document.getElementById('dateTo').value);
-      renderTable(allCodes.map(c=>({...c,range:c.weeks.slice(si,ei+1).reduce((a,b)=>a+b,0)})));
+      renderTable(allCodes.map(c=>({...c,range:rangeForCode(c)})));
     });
   });
 }
@@ -510,7 +509,15 @@ function buildPeriodOptions(){
 }
 
 function setRange(val){
-  if(val==='ytd'){document.getElementById('dateFrom').value=allWeeks[0].date;document.getElementById('dateTo').value=allWeeks[allWeeks.length-1].date;return;}
+  if(val==='ytd'){
+    // span the full data extent; use exact day bounds when daily data is present so the
+    // range includes the most recent days (not just the last week-bucket start)
+    const first=allDays.length?allDays[0].date:allWeeks[0].date;
+    const last=allDays.length?allDays[allDays.length-1].date:allWeeks[allWeeks.length-1].date;
+    document.getElementById('dateFrom').value=first;
+    document.getElementById('dateTo').value=last;
+    return;
+  }
   if(val==='custom')return;
   const months={};
   allWeeks.forEach(w=>{
@@ -611,7 +618,9 @@ function renderTable(enriched){
   filtered.sort((a,b)=>{
     const va=sortKey==='range'?a.range:sortKey==='total'?a.t:a[sortKey];
     const vb=sortKey==='range'?b.range:sortKey==='total'?b.t:b[sortKey];
-    return typeof va==='string'?sortDir*(va.localeCompare(vb)):sortDir*(vb-va);
+    // sortDir=-1 => descending (highest first), +1 => ascending; same rule for text & numbers
+    if(typeof va==='string')return sortDir*va.localeCompare(vb);
+    return sortDir*(va-vb);
   });
   const area=document.getElementById('table-area');
   if(!filtered.length){area.innerHTML=`<div class="no-data">No codes match current filters.</div>`;return;}
